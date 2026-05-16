@@ -14,6 +14,7 @@ import (
 	"github.com/goccy/go-json"
 
 	"imghat/api"
+	"imghat/internal/middleware"
 )
 
 const version = "0.1.0"
@@ -25,18 +26,7 @@ func main() {
 		WriteTimeout: 20 * time.Second,
 		JSONEncoder:  json.Marshal,
 		JSONDecoder:  json.Unmarshal,
-
-		// Return errors as JSON, never as HTML
-		ErrorHandler: func(c fiber.Ctx, err error) error {
-			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
-				code = e.Code
-			}
-			return c.Status(code).JSON(fiber.Map{
-				"code":    code,
-				"message": err.Error(),
-			})
-		},
+		ErrorHandler: middleware.ErrorHandler,
 	})
 
 	// Global middleware
