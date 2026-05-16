@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-// Resize will scale an image down to the requested dimensions.
+// Resize handles POST /v1/image/resize
 func Resize(c fiber.Ctx) error {
 	data, err := readFile(c)
 	if err != nil {

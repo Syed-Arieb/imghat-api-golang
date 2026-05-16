@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 )
 
-// Compress will compress a PNG or WebP image to a target quality level.
+// Compress handles POST /v1/image/compress
 func Compress(c fiber.Ctx) error {
 	data, err := readFile(c)
 	if err != nil {
