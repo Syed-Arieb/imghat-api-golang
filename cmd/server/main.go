@@ -14,6 +14,7 @@ import (
 	"github.com/goccy/go-json"
 
 	"imghat/api"
+	"imghat/internal/config"
 	"imghat/internal/middleware"
 )
 
@@ -43,20 +44,13 @@ func main() {
 		})
 	})
 
+	cfg := config.Load()
+
 	// All versioned image routes
-	api.RegisterRoutes(app)
+	api.RegisterRoutes(app, cfg)
 
 	// Start in background so we can listen for signals
-	go func() {
-		port := os.Getenv("PORT")
-		if port == "" {
-			port = "3000"
-		}
-		log.Printf("imghat %s listening on :%s", version, port)
-		if err := app.Listen(":" + port); err != nil {
-			log.Fatalf("server error: %v", err)
-		}
-	}()
+	app.Listen(":" + cfg.Port)
 
 	// Block until SIGINT / SIGTERM
 	quit := make(chan os.Signal, 1)

@@ -3,20 +3,21 @@ package api
 import (
 	"github.com/gofiber/fiber/v3"
 
+	"imghat/internal/config"
 	"imghat/internal/handler"
 	"imghat/internal/middleware"
 )
 
 // RegisterRoutes wires all versioned route groups onto the Fiber app.
-func RegisterRoutes(app *fiber.App) {
+func RegisterRoutes(app *fiber.App, cfg *config.Config) {
 	v1 := app.Group("/v1")
-	registerImageRoutes(v1)
+	registerImageRoutes(v1, cfg)
 }
 
-func registerImageRoutes(r fiber.Router) {
+func registerImageRoutes(r fiber.Router, cfg *config.Config) {
 	img := r.Group("/image",
-		middleware.RateLimit(3, 5), // 3 req/sec with burst of 5
-		middleware.ValidateImage(0),
+		middleware.RateLimit(cfg.RateLimit, cfg.RateBurst),
+		middleware.ValidateImage(cfg.MaxFileSize),
 	)
 
 	// Accepts: multipart/form-data { file, quality (1-100), format (png|webp) }

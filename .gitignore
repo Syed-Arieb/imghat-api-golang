@@ -3,7 +3,7 @@ bin/
 
 # env
 .env
-.env.*
+.env.local
 
 # test output
 *.test
