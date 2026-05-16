@@ -14,17 +14,17 @@ func RegisterRoutes(app *fiber.App) {
 }
 
 func registerImageRoutes(r fiber.Router) {
-	img := r.Group("/image", middleware.ValidateImage(0))
+	img := r.Group("/image",
+		middleware.RateLimit(3, 5), // 3 req/sec with burst of 5
+		middleware.ValidateImage(0),
+	)
 
-	// POST /v1/image/compress
 	// Accepts: multipart/form-data { file, quality (1-100), format (png|webp) }
 	img.Post("/compress", handler.Compress)
 
-	// POST /v1/image/resize
 	// Accepts: multipart/form-data { file, width, height, mode (fit|fill|exact) }
 	img.Post("/resize", handler.Resize)
 
-	// POST /v1/image/fit
 	// Accepts: multipart/form-data { file, ratio (e.g. "1:1"), format (png|webp) }
 	img.Post("/fit", handler.Fit)
 }

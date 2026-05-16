@@ -7,6 +7,7 @@ require (
 	github.com/goccy/go-json v0.10.6
 	github.com/gofiber/fiber/v3 v3.2.0
 	golang.org/x/image v0.40.0
+	golang.org/x/time v0.15.0
 )
 
 require (
