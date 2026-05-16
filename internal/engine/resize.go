@@ -50,19 +50,36 @@ func resizeImage(img image.Image, opts ResizeOptions) image.Image {
 	bounds := img.Bounds()
 	srcW, srcH := bounds.Dx(), bounds.Dy()
 
+	w, h := opts.Width, opts.Height
+
 	// Never scale up
-	if opts.Width >= srcW && opts.Height >= srcH {
+	if (w == 0 || w >= srcW) && (h == 0 || h >= srcH) {
 		return img
 	}
 
 	switch opts.Mode {
 	case ResizeFill:
-		return imaging.Fill(img, opts.Width, opts.Height, imaging.Center, imaging.Lanczos)
+		if w == 0 {
+			w = srcW
+		}
+		if h == 0 {
+			h = srcH
+		}
+		return imaging.Fill(img, w, h, imaging.Center, imaging.Lanczos)
 
 	case ResizeExact:
-		return imaging.Resize(img, opts.Width, opts.Height, imaging.Lanczos)
+		if w == 0 {
+			w = srcW
+		}
+		if h == 0 {
+			h = srcH
+		}
+		return imaging.Resize(img, w, h, imaging.Lanczos)
 
 	default: // ResizeFit
-		return imaging.Fit(img, opts.Width, opts.Height, imaging.Lanczos)
+		if w == 0 || h == 0 {
+			return imaging.Resize(img, w, h, imaging.Lanczos)
+		}
+		return imaging.Fit(img, w, h, imaging.Lanczos)
 	}
 }
