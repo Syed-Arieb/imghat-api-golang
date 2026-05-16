@@ -62,7 +62,7 @@ func canvasSize(srcW, srcH, ratioW, ratioH int) (int, int) {
 	if targetH >= srcH {
 		return srcW, targetH
 	}
-	// Height is the limiting dimension — fit by height
+	// Height is the limiting dimension - fit by height
 	targetW := srcH * ratioW / ratioH
 	return targetW, srcH
 }

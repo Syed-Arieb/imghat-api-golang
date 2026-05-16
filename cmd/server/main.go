@@ -36,7 +36,7 @@ func main() {
 		Format: "[${time}] ${status} ${method} ${path} ${latency}\n",
 	}))
 
-	// Health check — used by Docker / k8s probes
+	// Health check - used by Docker / k8s probes
 	app.Get("/healthz", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
