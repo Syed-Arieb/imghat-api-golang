@@ -21,17 +21,20 @@ func Fit(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	format := parseFormat(c.FormValue("format", "png"))
+
 	out, err := engine.Fit(data, engine.FitOptions{
 		RatioW:  ratioW,
 		RatioH:  ratioH,
 		Quality: parseQuality(c.FormValue("quality", "80")),
+		Format:  engine.Format(format),
 	})
 
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
 
-	return imageResponse(c, out)
+	return imageResponse(c, out, format)
 }
 
 // "16:9" → (16, 9)

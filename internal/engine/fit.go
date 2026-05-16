@@ -14,6 +14,7 @@ type FitOptions struct {
 	RatioW  int
 	RatioH  int
 	Quality float32
+	Format  Format // png or webp
 }
 
 // Pad img with transparent pixels to match target aspect ratio
@@ -29,7 +30,7 @@ func Fit(data []byte, opts FitOptions) ([]byte, error) {
 
 	fitted := fitImage(decoded.Image, opts.RatioW, opts.RatioH)
 
-	out, err := Encode(fitted, EncodeOptions{Quality: opts.Quality})
+	out, err := Encode(fitted, EncodeOptions{Quality: opts.Quality, Format: opts.Format})
 	if err != nil {
 		return nil, fmt.Errorf("fit: %w", err)
 	}

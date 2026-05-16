@@ -14,13 +14,15 @@ func Compress(c fiber.Ctx) error {
 	}
 
 	quality := c.FormValue("quality", "80")
+	format := parseFormat(c.FormValue("format", "png"))
 
 	out, err := engine.Compress(data, engine.CompressOptions{
 		Quality: parseQuality(quality),
+		Format:  engine.Format(format),
 	})
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
 
-	return imageResponse(c, out)
+	return imageResponse(c, out, format)
 }

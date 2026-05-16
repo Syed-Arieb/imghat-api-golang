@@ -34,9 +34,14 @@ func readFile(c fiber.Ctx) ([]byte, error) {
 	return buf, nil
 }
 
-// Write PNG bytes with the correct Content-Type.
-func imageResponse(c fiber.Ctx, data []byte) error {
-	c.Set(fiber.HeaderContentType, "image/png")
+// Write image bytes with the correct Content-Type based on format.
+func imageResponse(c fiber.Ctx, data []byte, format string) error {
+	switch format {
+	case "webp":
+		c.Set(fiber.HeaderContentType, "image/webp")
+	default:
+		c.Set(fiber.HeaderContentType, "image/png")
+	}
 	return c.Send(data)
 }
 
@@ -49,4 +54,12 @@ func parseQuality(s string) float32 {
 	}
 
 	return float32(v)
+}
+
+// Return "webp" if the input is "webp", otherwise "png".
+func parseFormat(s string) string {
+	if s == "webp" {
+		return "webp"
+	}
+	return "png"
 }

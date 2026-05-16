@@ -22,15 +22,18 @@ func Resize(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "at least one of width or height is required")
 	}
 
+	format := parseFormat(c.FormValue("format", "png"))
+
 	out, err := engine.Resize(data, engine.ResizeOptions{
 		Width:   w,
 		Height:  h,
 		Mode:    engine.ResizeMode(c.FormValue("mode", "fit")),
 		Quality: parseQuality(c.FormValue("quality", "80")),
+		Format:  engine.Format(format),
 	})
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
 
-	return imageResponse(c, out)
+	return imageResponse(c, out, format)
 }

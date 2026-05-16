@@ -5,6 +5,7 @@ import "fmt"
 // CompressOptions controls how the image is compressed.
 type CompressOptions struct {
 	Quality float32 // 1–100
+	Format  Format  // png or webp
 }
 
 // Compress decodes raw image bytes, re-encodes at the target quality
@@ -13,7 +14,7 @@ func Compress(data []byte, opts CompressOptions) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compress: %w", err)
 	}
-	out, err := Encode(decoded.Image, EncodeOptions{Quality: opts.Quality})
+	out, err := Encode(decoded.Image, EncodeOptions{Quality: opts.Quality, Format: opts.Format})
 	if err != nil {
 		return nil, fmt.Errorf("compress: %w", err)
 	}

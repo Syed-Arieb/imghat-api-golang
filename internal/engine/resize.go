@@ -27,6 +27,7 @@ type ResizeOptions struct {
 	Height  int
 	Mode    ResizeMode
 	Quality float32
+	Format  Format // png or webp
 }
 
 // Decode -> Scale -> Re-Encode
@@ -38,7 +39,7 @@ func Resize(data []byte, opts ResizeOptions) ([]byte, error) {
 
 	resized := resizeImage(decoded.Image, opts)
 
-	out, err := Encode(resized, EncodeOptions{Quality: opts.Quality})
+	out, err := Encode(resized, EncodeOptions{Quality: opts.Quality, Format: opts.Format})
 	if err != nil {
 		return nil, fmt.Errorf("resize: %w", err)
 	}
