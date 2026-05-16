@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"bytes"
 	"fmt"
 	"image"
 	"image/png"
@@ -14,12 +13,15 @@ type EncodeOptions struct {
 
 // Encode encodes img as PNG.
 func Encode(img image.Image, opts EncodeOptions) ([]byte, error) {
-	var buf bytes.Buffer
+	buf := getBuffer()
+	defer putBuffer(buf)
 	enc := &png.Encoder{CompressionLevel: qualityToPNGLevel(opts.Quality)}
-	if err := enc.Encode(&buf, img); err != nil {
+	if err := enc.Encode(buf, img); err != nil {
 		return nil, fmt.Errorf("png encode: %w", err)
 	}
-	return buf.Bytes(), nil
+	out := make([]byte, buf.Len())
+	copy(out, buf.Bytes())
+	return out, nil
 }
 
 func qualityToPNGLevel(q float32) png.CompressionLevel {

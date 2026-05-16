@@ -21,6 +21,8 @@ import (
 const version = "0.1.0"
 
 func main() {
+	cfg := config.Load()
+
 	app := fiber.New(fiber.Config{
 		AppName:      "imghat " + version,
 		ReadTimeout:  20 * time.Second,
@@ -28,7 +30,11 @@ func main() {
 		JSONEncoder:  json.Marshal,
 		JSONDecoder:  json.Unmarshal,
 		ErrorHandler: middleware.ErrorHandler,
+		ReduceMemoryUsage: true,
 	})
+
+	// Start rate-limit cleanup background goroutine
+	middleware.StartRateLimitCleanup()
 
 	// Global middleware
 	app.Use(recover.New()) // catch panics, keep the server alive
@@ -44,8 +50,6 @@ func main() {
 		})
 	})
 
-	cfg := config.Load()
-
 	// All versioned image routes
 	api.RegisterRoutes(app, cfg)
 
@@ -58,6 +62,7 @@ func main() {
 	<-quit
 
 	log.Println("shutting down gracefully…")
+	middleware.StopRateLimitCleanup()
 	if err := app.ShutdownWithTimeout(10 * time.Second); err != nil {
 		log.Fatalf("forced shutdown: %v", err)
 	}

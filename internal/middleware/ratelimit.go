@@ -14,40 +14,63 @@ type visitor struct {
 }
 
 var (
-	visitors = make(map[string]*visitor)
-	mu       sync.Mutex
+	visitors     sync.Map
+	cleanupMu    sync.Mutex
+	cleanupClose chan struct{}
 )
 
-func init() {
-	// Clean up stale visitors every minute
+// StartRateLimitCleanup launches the background goroutine that prunes stale
+// visitor entries. Safe to call multiple times; only the first starts the loop.
+func StartRateLimitCleanup() {
+	cleanupMu.Lock()
+	defer cleanupMu.Unlock()
+	if cleanupClose != nil {
+		return
+	}
+	cleanupClose = make(chan struct{})
 	go func() {
-		for range time.Tick(time.Minute) {
-			mu.Lock()
-			for ip, v := range visitors {
-				if time.Since(v.lastSeen) > 3*time.Minute {
-					delete(visitors, ip)
-				}
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				visitors.Range(func(key, value any) bool {
+					v := value.(*visitor)
+					if time.Since(v.lastSeen) > 3*time.Minute {
+						visitors.Delete(key)
+					}
+					return true
+				})
+			case <-cleanupClose:
+				return
 			}
-			mu.Unlock()
 		}
 	}()
+}
+
+// StopRateLimitCleanup signals the cleanup goroutine to stop. Intended for
+// use during graceful shutdown.
+func StopRateLimitCleanup() {
+	cleanupMu.Lock()
+	defer cleanupMu.Unlock()
+	if cleanupClose == nil {
+		return
+	}
+	close(cleanupClose)
+	cleanupClose = nil
 }
 
 func RateLimit(rps float64, burst int) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		ip := c.IP()
 
-		mu.Lock()
-		v, ok := visitors[ip]
-		if !ok {
-			v = &visitor{limiter: rate.NewLimiter(rate.Limit(rps), burst)}
-			visitors[ip] = v
-		}
-		v.lastSeen = time.Now()
-		lim := v.limiter
-		mu.Unlock()
+		v, _ := visitors.LoadOrStore(ip, &visitor{
+			limiter: rate.NewLimiter(rate.Limit(rps), burst),
+		})
+		vis := v.(*visitor)
+		vis.lastSeen = time.Now()
 
-		if !lim.Allow() {
+		if !vis.limiter.Allow() {
 			return fiber.NewError(fiber.StatusTooManyRequests, "rate limit exceeded")
 		}
 		return c.Next()

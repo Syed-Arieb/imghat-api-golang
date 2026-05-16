@@ -7,7 +7,13 @@ import (
 )
 
 // Extract raw bytes from the multipart "file" field.
+// If ValidateImage middleware already read the file, the cached bytes
+// stored in the request context are returned directly.
 func readFile(c fiber.Ctx) ([]byte, error) {
+	if data, ok := c.Locals("file_bytes").([]byte); ok {
+		return data, nil
+	}
+
 	fh, err := c.FormFile("file")
 	if err != nil {
 		return nil, fiber.NewError(fiber.StatusBadRequest, "missing file field")

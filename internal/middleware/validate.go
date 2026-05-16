@@ -1,10 +1,14 @@
 package middleware
 
 import (
+	"io"
+
 	"github.com/gofiber/fiber/v3"
 )
 
 const defaultMaxBytes = 10 << 20 // 10 MB
+
+const ctxFileBytes = "file_bytes"
 
 // Byte signatures used to detect format from raw bytes
 var (
@@ -13,7 +17,8 @@ var (
 	webpSig   = []byte("WEBP")
 )
 
-// Middleware that rejects invalid uploads.
+// Middleware that rejects invalid uploads and stores the validated file bytes
+// in the request context so the handler can reuse them without re-reading.
 func ValidateImage(maxBytes int64) fiber.Handler {
 	if maxBytes == 0 {
 		maxBytes = defaultMaxBytes
@@ -22,7 +27,6 @@ func ValidateImage(maxBytes int64) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		fh, err := c.FormFile("file")
 		if err != nil {
-			// No file, let handler produce missing-field error.
 			return c.Next()
 		}
 
@@ -37,16 +41,17 @@ func ValidateImage(maxBytes int64) fiber.Handler {
 		}
 		defer f.Close()
 
-		header := make([]byte, 12)
-		if _, err := f.Read(header); err != nil {
-			return fiber.NewError(fiber.StatusBadRequest, "could not read file header")
+		buf := make([]byte, fh.Size)
+		if _, err := io.ReadFull(f, buf); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "could not read file")
 		}
 
-		if !isPNG(header) && !isWebP(header) {
+		if !isPNG(buf) && !isWebP(buf) {
 			return fiber.NewError(fiber.StatusUnsupportedMediaType,
 				"only PNG and WebP images are supported")
 		}
 
+		c.Locals(ctxFileBytes, buf)
 		return c.Next()
 	}
 }
