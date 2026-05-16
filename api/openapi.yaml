@@ -1,0 +1,134 @@
+openapi: 3.0.3
+info:
+  title: imghat
+  version: 0.1.0
+  description: Image compression, resizing, and smart-fit API
+
+servers:
+  - url: http://localhost:3000/v1
+
+paths:
+  /image/compress:
+    post:
+      summary: Compress an image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                quality:
+                  type: number
+                  minimum: 1
+                  maximum: 100
+                  default: 80
+      responses:
+        "200":
+          description: Compressed PNG
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+
+  /image/resize:
+    post:
+      summary: Resize an image (scale down only)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                width:
+                  type: integer
+                height:
+                  type: integer
+                mode:
+                  type: string
+                  enum: [fit, fill, exact]
+                  default: fit
+                quality:
+                  type: number
+                  default: 80
+      responses:
+        "200":
+          description: Resized PNG
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /image/fit:
+    post:
+      summary: Smart-fit image to a target aspect ratio with transparent padding
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, ratio]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                ratio:
+                  type: string
+                  example: "1:1"
+                  description: Target aspect ratio e.g. "1:1", "16:9"
+                quality:
+                  type: number
+                  default: 80
+      responses:
+        "200":
+          description: Padded PNG
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UnsupportedMedia:
+      description: File is not PNG or WebP
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    UnprocessableEntity:
+      description: Image could not be processed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
