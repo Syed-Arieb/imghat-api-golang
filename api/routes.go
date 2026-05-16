@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v3"
 
 	"imghat/internal/handler"
+	"imghat/internal/middleware"
 )
 
 // RegisterRoutes wires all versioned route groups onto the Fiber app.
@@ -13,7 +14,7 @@ func RegisterRoutes(app *fiber.App) {
 }
 
 func registerImageRoutes(r fiber.Router) {
-	img := r.Group("/image")
+	img := r.Group("/image", middleware.ValidateImage(0))
 
 	// POST /v1/image/compress
 	// Accepts: multipart/form-data { file, quality (1-100), format (png|webp) }
