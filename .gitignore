@@ -1,0 +1,16 @@
+# binaries
+bin/
+
+# env
+.env
+.env.*
+
+# test output
+*.test
+*.out
+coverage.html
+
+# editor
+.idea/
+.vscode/
+*.swp
