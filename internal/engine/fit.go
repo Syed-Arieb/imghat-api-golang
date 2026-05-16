@@ -11,36 +11,30 @@ import (
 // Controls fit behaviour
 type FitOptions struct {
 	// RatioW and RatioH define target aspect ratio.
-	RatioW    int
-	RatioH    int
-	FormatOut Format
-	Quality   float32
+	RatioW  int
+	RatioH  int
+	Quality float32
 }
 
 // Pad img with transparent pixels to match target aspect ratio
-func Fit(data []byte, opts FitOptions) ([]byte, Format, error) {
+func Fit(data []byte, opts FitOptions) ([]byte, error) {
 	if opts.RatioW <= 0 || opts.RatioH <= 0 {
-		return nil, "", fmt.Errorf("fit: invalid ratio %d:%d", opts.RatioW, opts.RatioH)
+		return nil, fmt.Errorf("fit: invalid ratio %d:%d", opts.RatioW, opts.RatioH)
 	}
 
 	decoded, err := Decode(data)
 	if err != nil {
-		return nil, "", fmt.Errorf("fit: %w", err)
+		return nil, fmt.Errorf("fit: %w", err)
 	}
 
 	fitted := fitImage(decoded.Image, opts.RatioW, opts.RatioH)
 
-	outFmt := opts.FormatOut
-	if outFmt == "" {
-		outFmt = decoded.Format
-	}
-
-	out, err := Encode(fitted, EncodeOptions{Format: outFmt, Quality: opts.Quality})
+	out, err := Encode(fitted, EncodeOptions{Quality: opts.Quality})
 	if err != nil {
-		return nil, "", fmt.Errorf("fit: %w", err)
+		return nil, fmt.Errorf("fit: %w", err)
 	}
 
-	return out, outFmt, nil
+	return out, nil
 }
 
 // Compute canvas size and paste the image centered.

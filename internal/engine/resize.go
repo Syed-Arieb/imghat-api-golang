@@ -23,33 +23,27 @@ const (
 
 // Controls resize behaviour.
 type ResizeOptions struct {
-	Width     int
-	Height    int
-	Mode      ResizeMode
-	FormatOut Format
-	Quality   float32
+	Width   int
+	Height  int
+	Mode    ResizeMode
+	Quality float32
 }
 
 // Decode -> Scale -> Re-Encode
-func Resize(data []byte, opts ResizeOptions) ([]byte, Format, error) {
+func Resize(data []byte, opts ResizeOptions) ([]byte, error) {
 	decoded, err := Decode(data)
 	if err != nil {
-		return nil, "", fmt.Errorf("resize: %w", err)
+		return nil, fmt.Errorf("resize: %w", err)
 	}
 
 	resized := resizeImage(decoded.Image, opts)
 
-	outFmt := opts.FormatOut
-	if outFmt == "" {
-		outFmt = decoded.Format
-	}
-
-	out, err := Encode(resized, EncodeOptions{Format: outFmt, Quality: opts.Quality})
+	out, err := Encode(resized, EncodeOptions{Quality: opts.Quality})
 	if err != nil {
-		return nil, "", fmt.Errorf("resize: %w", err)
+		return nil, fmt.Errorf("resize: %w", err)
 	}
 
-	return out, outFmt, nil
+	return out, nil
 }
 
 func resizeImage(img image.Image, opts ResizeOptions) image.Image {

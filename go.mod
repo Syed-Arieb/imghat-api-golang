@@ -3,7 +3,6 @@ module imghat
 go 1.26.2
 
 require (
-	github.com/chai2010/webp v1.4.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/goccy/go-json v0.10.6
 	github.com/gofiber/fiber/v3 v3.2.0
