@@ -41,6 +41,7 @@ func main() {
 	app.Use(logger.New(logger.Config{
 		Format: "[${time}] ${status} ${method} ${path} ${latency}\n",
 	}))
+	app.Use(middleware.MetricsMiddleware)
 
 	// Health check - used by Docker / k8s probes
 	app.Get("/healthz", func(c fiber.Ctx) error {
@@ -49,6 +50,9 @@ func main() {
 			"version": version,
 		})
 	})
+
+	// Prometheus metrics endpoint
+	app.Get("/metrics", middleware.MetricsHandler)
 
 	// All versioned image routes
 	api.RegisterRoutes(app, cfg)
