@@ -138,3 +138,78 @@ func TestInvalidRatio(t *testing.T) {
 		t.Fatalf("expected 400, got %d", resp.StatusCode)
 	}
 }
+
+func TestCompressWebP(t *testing.T) {
+	app := newApp()
+	body, ct := multipartBody(t, makePNG(200, 200), map[string]string{
+		"quality": "60", "format": "webp",
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/image/compress", body)
+	req.Header.Set("Content-Type", ct)
+
+	resp, err := app.Test(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/webp" {
+		t.Fatalf("expected image/webp, got %s", ct)
+	}
+}
+
+func TestResizeWebP(t *testing.T) {
+	app := newApp()
+	body, ct := multipartBody(t, makePNG(800, 600), map[string]string{
+		"width": "400", "mode": "fit", "format": "webp",
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/image/resize", body)
+	req.Header.Set("Content-Type", ct)
+
+	resp, _ := app.Test(req)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/webp" {
+		t.Fatalf("expected image/webp, got %s", ct)
+	}
+}
+
+func TestFitWebP(t *testing.T) {
+	app := newApp()
+	body, ct := multipartBody(t, makePNG(30, 24), map[string]string{
+		"ratio": "1:1", "format": "webp",
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/image/fit", body)
+	req.Header.Set("Content-Type", ct)
+
+	resp, _ := app.Test(req)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/webp" {
+		t.Fatalf("expected image/webp, got %s", ct)
+	}
+}
+
+func TestCompressDefaultsToPNG(t *testing.T) {
+	app := newApp()
+	body, ct := multipartBody(t, makePNG(100, 100), map[string]string{
+		"quality": "80", "format": "invalid",
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/image/compress", body)
+	req.Header.Set("Content-Type", ct)
+
+	resp, _ := app.Test(req)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/png" {
+		t.Fatalf("expected image/png (default), got %s", ct)
+	}
+}
