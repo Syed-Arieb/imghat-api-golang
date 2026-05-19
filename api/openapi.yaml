@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: imghat
-  version: 0.1.0
+  version: 0.2.0
   description: Image compression, resizing, and smart-fit API
 
 servers:
@@ -27,16 +27,29 @@ paths:
                   minimum: 1
                   maximum: 100
                   default: 80
+                format:
+                  type: string
+                  enum: [png, webp]
+                  default: png
+                  description: Output image format
       responses:
         "200":
-          description: Compressed PNG
+          description: Compressed image
           content:
             image/png:
               schema:
                 type: string
                 format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/TooLarge" }
         "415": { $ref: "#/components/responses/UnsupportedMedia" }
         "422": { $ref: "#/components/responses/UnprocessableEntity" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
   /image/resize:
     post:
@@ -63,15 +76,29 @@ paths:
                 quality:
                   type: number
                   default: 80
+                format:
+                  type: string
+                  enum: [png, webp]
+                  default: png
+                  description: Output image format
       responses:
         "200":
-          description: Resized PNG
+          description: Resized image
           content:
             image/png:
               schema:
                 type: string
                 format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/TooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
   /image/fit:
     post:
@@ -94,15 +121,29 @@ paths:
                 quality:
                   type: number
                   default: 80
+                format:
+                  type: string
+                  enum: [png, webp]
+                  default: png
+                  description: Output image format
       responses:
         "200":
-          description: Padded PNG
+          description: Padded image
           content:
             image/png:
               schema:
                 type: string
                 format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
         "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/TooLarge" }
+        "415": { $ref: "#/components/responses/UnsupportedMedia" }
+        "422": { $ref: "#/components/responses/UnprocessableEntity" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "500": { $ref: "#/components/responses/InternalError" }
 
 components:
   responses:
@@ -120,6 +161,24 @@ components:
             $ref: "#/components/schemas/Error"
     UnprocessableEntity:
       description: Image could not be processed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooLarge:
+      description: File exceeds maximum allowed size
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InternalError:
+      description: Internal server error
       content:
         application/json:
           schema:
