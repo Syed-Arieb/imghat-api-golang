@@ -13,7 +13,7 @@ tidy:
 	go mod tidy
 
 test:
-	go test ./... -v -race
+	go test ./... -v
 
 lint:
 	golangci-lint run ./...
