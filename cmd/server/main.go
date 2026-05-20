@@ -18,7 +18,7 @@ import (
 	"imghat/internal/middleware"
 )
 
-const version = "0.2.0"
+const version = "0.2.3"
 
 func main() {
 	cfg := config.Load()
@@ -35,6 +35,9 @@ func main() {
 
 	// Start rate-limit cleanup background goroutine
 	middleware.StartRateLimitCleanup()
+
+	// Initialize Prometheus metric collectors
+	middleware.InitMetrics()
 
 	// Global middleware
 	app.Use(recover.New()) // catch panics, keep the server alive

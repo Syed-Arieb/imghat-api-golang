@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: imghat
-  version: 0.2.0
+  version: 0.2.3
   description: Image compression, resizing, and smart-fit API
 
 servers:

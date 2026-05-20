@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -14,6 +13,17 @@ import (
 )
 
 var (
+	reg             *prometheus.Registry
+	requestsTotal   *prometheus.CounterVec
+	requestDuration *prometheus.HistogramVec
+	requestInFlight prometheus.Gauge
+)
+
+// InitMetrics creates and registers all Prometheus metric collectors.
+// Must be called once at startup before any requests are handled.
+func InitMetrics() {
+	reg = prometheus.NewRegistry()
+
 	requestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "imghat_requests_total",
@@ -38,22 +48,15 @@ var (
 		},
 	)
 
-	metricsOnce sync.Once
-)
-
-func initMetrics() {
-	metricsOnce.Do(func() {
-		prometheus.MustRegister(requestsTotal)
-		prometheus.MustRegister(requestDuration)
-		prometheus.MustRegister(requestInFlight)
-		prometheus.MustRegister(collectors.NewGoCollector())
-		prometheus.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
-	})
+	reg.MustRegister(requestsTotal)
+	reg.MustRegister(requestDuration)
+	reg.MustRegister(requestInFlight)
+	reg.MustRegister(collectors.NewGoCollector())
+	reg.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 }
 
 // MetricsMiddleware records request count, duration, and concurrent requests.
 func MetricsMiddleware(c fiber.Ctx) error {
-	initMetrics()
 	start := time.Now()
 	requestInFlight.Inc()
 	defer requestInFlight.Dec()
@@ -72,9 +75,8 @@ func MetricsMiddleware(c fiber.Ctx) error {
 
 // MetricsHandler serves the Prometheus metrics as plain text.
 func MetricsHandler(c fiber.Ctx) error {
-	initMetrics()
 	var buf bytes.Buffer
-	promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP(
+	promhttp.HandlerFor(reg, promhttp.HandlerOpts{}).ServeHTTP(
 		&fiberResponseWriter{buf: &buf}, newFiberRequest(c),
 	)
 	c.Set("Content-Type", "text/plain; version=0.0.4")
