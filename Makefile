@@ -1,4 +1,4 @@
-.PHONY: run build tidy test lint
+.PHONY: run build build-linux tidy test lint
 
 BIN     := imghat
 CMD     := ./cmd/server
@@ -8,6 +8,9 @@ run:
 
 build:
 	go build -o bin/$(BIN) $(CMD)/main.go
+
+build-linux:
+	cmd /c "set GOOS=linux&set GOARCH=amd64&go build -o bin/$(BIN)-linux $(CMD)/main.go"
 
 tidy:
 	go mod tidy
